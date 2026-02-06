@@ -33,7 +33,9 @@ class JobStatus(str, Enum):
 
 class AnalyzeRequest(BaseModel):
     """Request to analyze a document."""
-    document_url: str = Field(..., description="S3 presigned URL or direct URL to document")
+    document_url: Optional[str] = Field(None, description="S3 presigned URL or direct URL to document")
+    document_text: Optional[str] = Field(None, description="Raw document text (for local testing)")
+    document_id: Optional[str] = Field(None, description="Document ID from database (optional)")
     case_id: str = Field(..., description="Case identifier")
     callback_url: Optional[str] = Field(None, description="Webhook URL for completion notification")
     

@@ -44,11 +44,11 @@ async def verify_api_key(x_api_key: str = Header(..., description="API key for a
     return x_api_key
 
 
-def get_db_session() -> Session:
+def get_db_session():
     """
     Get database session dependency.
     
     Yields:
         Session: SQLAlchemy database session
     """
-    return get_db()
+    yield from get_db()

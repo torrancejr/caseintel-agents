@@ -96,7 +96,7 @@ async def get_job_results(
         # Build response
         response = ResultsResponse(
             job_id=str(job.id),
-            case_id=job.case_id,
+            case_id=str(job.case_id),
             status=job.status,
             started_at=job.started_at,
             completed_at=job.completed_at,
@@ -113,12 +113,13 @@ async def get_job_results(
             )
         
         # Add metadata results
-        if result.metadata:
+        if result.document_metadata:
+            metadata = result.document_metadata if isinstance(result.document_metadata, dict) else {}
             response.metadata = MetadataResult(
-                dates=result.metadata.get("dates", []),
-                people=result.metadata.get("people", []),
-                entities=result.metadata.get("entities", []),
-                locations=result.metadata.get("locations", [])
+                dates=metadata.get("dates", []),
+                people=metadata.get("people", []),
+                entities=metadata.get("entities", []),
+                locations=metadata.get("locations", [])
             )
         
         # Add privilege results
@@ -185,9 +186,9 @@ async def get_case_timeline(
         for event in events:
             event_list.append({
                 "id": str(event.id),
-                "date": event.date.isoformat(),
+                "date": event.event_date.isoformat(),
                 "event": event.event_description,
-                "source_document_id": str(event.source_document_id) if event.source_document_id else None,
+                "document_id": str(event.document_id) if event.document_id else None,
                 "source_page": event.source_page,
                 "significance": event.significance,
                 "created_by": event.created_by

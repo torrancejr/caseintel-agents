@@ -24,38 +24,50 @@ router = APIRouter(prefix="/api/v1", tags=["analysis"], dependencies=[Depends(ve
 
 async def process_document_pipeline(
     job_id: str,
+    document_id: str,
     document_url: str,
     case_id: str,
     callback_url: str = None,
-    db: Session = None
+    document_text: str = None
 ):
     """
     Background task to process document through the pipeline.
     
     Args:
         job_id: Job identifier
-        document_url: Document URL
+        document_id: Document ID from database
+        document_url: Document URL (optional if document_text provided)
         case_id: Case identifier
         callback_url: Optional webhook URL
-        db: Database session
+        document_text: Raw document text (optional, for local testing)
     """
+    from src.services.db import get_db_context
+    
     try:
         logger.info(f"Starting pipeline processing for job {job_id}")
         
-        # Update job status
-        job = db.query(AnalysisJob).filter(AnalysisJob.id == job_id).first()
-        if job:
-            job.status = "processing"
-            job.started_at = datetime.utcnow()
-            db.commit()
+        # Create database session for background task
+        with get_db_context() as db:
+            # Update job status
+            job = db.query(AnalysisJob).filter(AnalysisJob.id == job_id).first()
+            if job:
+                job.status = "processing"
+                job.started_at = datetime.utcnow()
+                db.commit()
         
-        # Download document
-        logger.info(f"Downloading document from {document_url}")
-        document_content = s3_service.download_from_url(document_url)
-        
-        # Extract text (placeholder - in production, use proper PDF/DOCX extraction)
-        # TODO: Implement proper document text extraction
-        raw_text = document_content.decode("utf-8", errors="ignore")
+        # Get document text
+        if document_text:
+            # Use provided text directly (local testing)
+            logger.info(f"Using provided document text ({len(document_text)} characters)")
+            raw_text = document_text
+        else:
+            # Download document from URL
+            logger.info(f"Downloading document from {document_url}")
+            document_content = s3_service.download_from_url(document_url)
+            
+            # Extract text (placeholder - in production, use proper PDF/DOCX extraction)
+            # TODO: Implement proper document text extraction
+            raw_text = document_content.decode("utf-8", errors="ignore")
         
         # Run pipeline
         final_state = await run_pipeline(
@@ -67,77 +79,87 @@ async def process_document_pipeline(
         )
         
         # Store results in database
-        result = AnalysisResult(
-            job_id=job_id,
-            case_id=case_id,
-            document_type=str(final_state.get("document_type")),
-            classification_confidence=final_state.get("classification_confidence"),
-            classification_reasoning=final_state.get("classification_reasoning"),
-            document_sub_type=final_state.get("document_sub_type"),
-            metadata={
-                "dates": final_state.get("dates", []),
-                "people": final_state.get("people", []),
-                "entities": final_state.get("entities", []),
-                "locations": final_state.get("locations", [])
-            },
-            privilege_flags=final_state.get("privilege_flags"),
-            privilege_reasoning=final_state.get("privilege_reasoning"),
-            privilege_confidence=final_state.get("privilege_confidence"),
-            privilege_recommendation=final_state.get("privilege_recommendation"),
-            is_hot_doc=final_state.get("is_hot_doc", False),
-            hot_doc_score=final_state.get("hot_doc_score"),
-            hot_doc_severity=final_state.get("hot_doc_severity"),
-            hot_doc_data={
-                "flags": final_state.get("hot_doc_reasons", [])
-            },
-            summary=final_state.get("summary"),
-            key_facts=final_state.get("key_facts"),
-            legal_issues=final_state.get("legal_issues"),
-            draft_narrative=final_state.get("draft_narrative"),
-            evidence_gaps=final_state.get("evidence_gaps"),
-            cross_references={
-                "related_docs": final_state.get("related_documents", []),
-                "timeline": final_state.get("timeline_events", []),
-                "witnesses": final_state.get("witness_mentions", []),
-                "consistency_flags": final_state.get("consistency_flags", [])
-            }
-        )
-        db.add(result)
-        
-        # Store timeline events
-        for event in final_state.get("timeline_events", []):
-            timeline_event = AgentTimelineEvent(
+        with get_db_context() as db:
+            # Extract document type value (handle enum)
+            doc_type = final_state.get("document_type")
+            if hasattr(doc_type, 'value'):
+                doc_type_str = doc_type.value
+            else:
+                doc_type_str = str(doc_type).replace("DocumentType.", "").lower()
+            
+            result = AnalysisResult(
+                job_id=job_id,
+                document_id=document_id,
                 case_id=case_id,
-                event_date=event.get("date"),
-                event_description=event.get("event"),
-                source_document_id=job_id,
-                source_page=event.get("source_page"),
-                significance=event.get("significance"),
-                created_by="agent"
+                document_type=doc_type_str,
+                classification_confidence=final_state.get("classification_confidence"),
+                classification_reasoning=final_state.get("classification_reasoning"),
+                document_sub_type=final_state.get("document_sub_type"),
+                document_metadata={
+                    "dates": final_state.get("dates", []),
+                    "people": final_state.get("people", []),
+                    "entities": final_state.get("entities", []),
+                    "locations": final_state.get("locations", [])
+                },
+                privilege_flags=final_state.get("privilege_flags"),
+                privilege_reasoning=final_state.get("privilege_reasoning"),
+                privilege_confidence=final_state.get("privilege_confidence"),
+                privilege_recommendation=final_state.get("privilege_recommendation"),
+                is_hot_doc=final_state.get("is_hot_doc", False),
+                hot_doc_score=final_state.get("hot_doc_score"),
+                hot_doc_severity=final_state.get("hot_doc_severity"),
+                hot_doc_data={
+                    "flags": final_state.get("hot_doc_reasons", [])
+                },
+                summary=final_state.get("summary"),
+                key_facts=final_state.get("key_facts"),
+                legal_issues=final_state.get("legal_issues"),
+                draft_narrative=final_state.get("draft_narrative"),
+                evidence_gaps=final_state.get("evidence_gaps"),
+                cross_references={
+                    "related_docs": final_state.get("related_documents", []),
+                    "timeline": final_state.get("timeline_events", []),
+                    "witnesses": final_state.get("witness_mentions", []),
+                    "consistency_flags": final_state.get("consistency_flags", [])
+                }
             )
-            db.add(timeline_event)
-        
-        # Store witness mentions
-        for witness in final_state.get("witness_mentions", []):
-            for appearance in witness.get("appearances", []):
-                mention = WitnessMention(
+            db.add(result)
+            
+            # Store timeline events
+            for event in final_state.get("timeline_events", []):
+                timeline_event = AgentTimelineEvent(
                     case_id=case_id,
-                    witness_name=witness.get("name"),
-                    role=witness.get("role"),
-                    document_id=job_id,
-                    context=appearance.get("context"),
-                    page_number=appearance.get("page")
+                    document_id=document_id,
+                    event_date=event.get("date"),
+                    event_description=event.get("event"),
+                    source_page=event.get("source_page"),
+                    significance=event.get("significance"),
+                    created_by="agent"
                 )
-                db.add(mention)
-        
-        # Update job status
-        if job:
-            job.status = "completed"
-            job.completed_at = datetime.utcnow()
-            job.progress_percent = 100
-            job.current_agent = None
-        
-        db.commit()
+                db.add(timeline_event)
+            
+            # Store witness mentions
+            for witness in final_state.get("witness_mentions", []):
+                for appearance in witness.get("appearances", []):
+                    mention = WitnessMention(
+                        case_id=case_id,
+                        document_id=document_id,
+                        witness_name=witness.get("name"),
+                        role=witness.get("role"),
+                        context=appearance.get("context"),
+                        page_number=appearance.get("page")
+                    )
+                    db.add(mention)
+            
+            # Update job status
+            job = db.query(AnalysisJob).filter(AnalysisJob.id == job_id).first()
+            if job:
+                job.status = "completed"
+                job.completed_at = datetime.utcnow()
+                job.progress_percent = 100
+                job.current_agent = None
+            
+            db.commit()
         
         # Add to vector store for RAG
         if raw_text and final_state.get("document_type"):
@@ -180,11 +202,14 @@ async def process_document_pipeline(
         logger.error(f"Pipeline processing failed for job {job_id}: {str(e)}")
         
         # Update job with error
-        if db and job:
-            job.status = "failed"
-            job.error_message = str(e)
-            job.completed_at = datetime.utcnow()
-            db.commit()
+        from src.services.db import get_db_context
+        with get_db_context() as db:
+            job = db.query(AnalysisJob).filter(AnalysisJob.id == job_id).first()
+            if job:
+                job.status = "failed"
+                job.error_message = str(e)
+                job.completed_at = datetime.utcnow()
+                db.commit()
         
         # Send failure notification
         if callback_url:
@@ -207,12 +232,22 @@ async def analyze_document(
     Returns immediately with a job ID. Processing happens in the background.
     """
     try:
+        # Validate request
+        if not request.document_url and not request.document_text:
+            raise HTTPException(
+                status_code=400,
+                detail="Either document_url or document_text must be provided"
+            )
+        
+        # Use provided document_id or generate a placeholder
+        document_id = request.document_id or str(uuid.uuid4())
+        
         # Create job record
         job_id = str(uuid.uuid4())
         job = AnalysisJob(
             id=job_id,
+            document_id=document_id,
             case_id=request.case_id,
-            document_url=request.document_url,
             status="queued",
             progress_percent=0
         )
@@ -225,10 +260,11 @@ async def analyze_document(
         background_tasks.add_task(
             process_document_pipeline,
             job_id=job_id,
+            document_id=document_id,
             document_url=request.document_url,
             case_id=request.case_id,
             callback_url=request.callback_url,
-            db=db
+            document_text=request.document_text
         )
         
         return AnalyzeResponse(

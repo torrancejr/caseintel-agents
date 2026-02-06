@@ -27,9 +27,9 @@ class AnalysisJob(Base):
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     
-    # Foreign keys to backend tables
-    document_id = Column(UUID(as_uuid=True), ForeignKey("documents.id", ondelete="CASCADE"), nullable=False, index=True)
-    case_id = Column(UUID(as_uuid=True), ForeignKey("cases.id", ondelete="CASCADE"), nullable=False, index=True)
+    # Foreign keys to backend tables (constraints exist in DB, not enforced by SQLAlchemy)
+    document_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    case_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     
     # Job status tracking
     status = Column(String(50), default="queued", nullable=False)  # queued, processing, completed, failed, cancelled
@@ -61,10 +61,10 @@ class AnalysisResult(Base):
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     
-    # Foreign keys
-    job_id = Column(UUID(as_uuid=True), ForeignKey("analysis_jobs.id", ondelete="CASCADE"), nullable=False, index=True)
-    document_id = Column(UUID(as_uuid=True), ForeignKey("documents.id", ondelete="CASCADE"), nullable=False, index=True)
-    case_id = Column(UUID(as_uuid=True), ForeignKey("cases.id", ondelete="CASCADE"), nullable=False, index=True)
+    # Foreign keys (constraints exist in DB, not enforced by SQLAlchemy)
+    job_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    document_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    case_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     
     # Agent 1: Document Classifier
     document_type = Column(String(100), nullable=True)  # email, contract, memo, pleading, etc.
@@ -120,9 +120,9 @@ class AgentTimelineEvent(Base):
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     
-    # Foreign keys
-    case_id = Column(UUID(as_uuid=True), ForeignKey("cases.id", ondelete="CASCADE"), nullable=False, index=True)
-    document_id = Column(UUID(as_uuid=True), ForeignKey("documents.id", ondelete="SET NULL"), nullable=True, index=True)
+    # Foreign keys (constraints exist in DB, not enforced by SQLAlchemy)
+    case_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    document_id = Column(UUID(as_uuid=True), nullable=True, index=True)
     
     # Event data
     event_date = Column(Date, nullable=False, index=True)
@@ -154,9 +154,9 @@ class WitnessMention(Base):
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     
-    # Foreign keys
-    case_id = Column(UUID(as_uuid=True), ForeignKey("cases.id", ondelete="CASCADE"), nullable=False, index=True)
-    document_id = Column(UUID(as_uuid=True), ForeignKey("documents.id", ondelete="SET NULL"), nullable=True, index=True)
+    # Foreign keys (constraints exist in DB, not enforced by SQLAlchemy)
+    case_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    document_id = Column(UUID(as_uuid=True), nullable=True, index=True)
     
     # Witness data
     witness_name = Column(String(500), nullable=False, index=True)
@@ -185,8 +185,8 @@ class AgentExecutionLog(Base):
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     
-    # Foreign keys
-    job_id = Column(UUID(as_uuid=True), ForeignKey("analysis_jobs.id", ondelete="CASCADE"), nullable=False, index=True)
+    # Foreign keys (constraints exist in DB, not enforced by SQLAlchemy)
+    job_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     
     # Agent info
     agent_name = Column(String(100), nullable=False, index=True)  # classifier, metadata, privilege, etc.
