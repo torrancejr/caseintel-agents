@@ -3,17 +3,10 @@ runtime: python3
 build:
   commands:
     pre-build:
-      - echo "Installing dependencies..."
       - pip install --upgrade pip
     build:
-      - echo "Installing requirements..."
       - pip install -r requirements.txt
-    post-build:
-      - echo "Build complete!"
-      - python --version
-      - pip list
 run:
-  runtime-version: 3.12
   command: uvicorn src.api.main:app --host 0.0.0.0 --port 8000
   network:
     port: 8000
