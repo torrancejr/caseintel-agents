@@ -1,0 +1,25 @@
+version: 1.0
+runtime: python3
+build:
+  commands:
+    pre-build:
+      - echo "Installing dependencies..."
+      - pip install --upgrade pip
+    build:
+      - echo "Installing requirements..."
+      - pip install -r requirements.txt
+    post-build:
+      - echo "Build complete!"
+      - python --version
+      - pip list
+run:
+  runtime-version: 3.11
+  command: uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --workers 2
+  network:
+    port: 8000
+    env: vpc-connector
+  env:
+    - name: PYTHONUNBUFFERED
+      value: "1"
+    - name: PYTHONPATH
+      value: "/app"

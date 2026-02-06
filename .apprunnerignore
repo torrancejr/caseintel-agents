@@ -1,0 +1,60 @@
+# Git
+.git
+.gitignore
+
+# Kiro
+.kiro
+
+# Test files
+test_documents/
+tests/
+*.test.py
+test_*.py
+*_test.py
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Documentation
+*.md
+!README.md
+
+# Scripts
+*.sh
+!migrations/*.sql
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+test_output.log
+
+# Database
+*.db
+*.sqlite
+
+# ChromaDB local storage
+chroma/
