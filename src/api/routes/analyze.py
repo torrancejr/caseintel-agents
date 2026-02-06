@@ -242,6 +242,10 @@ async def analyze_document(
         # Use provided document_id or generate a placeholder
         document_id = request.document_id or str(uuid.uuid4())
         
+        # For local testing with document_text, we may not have a document record
+        # The foreign key constraint will be handled by the database
+        # In production, the backend creates the document record first
+        
         # Create job record
         job_id = str(uuid.uuid4())
         job = AnalysisJob(
@@ -252,7 +256,21 @@ async def analyze_document(
             progress_percent=0
         )
         db.add(job)
-        db.commit()
+        
+        try:
+            db.commit()
+        except Exception as e:
+            db.rollback()
+            # If foreign key constraint fails, it means document doesn't exist
+            # For local testing, we'll create a minimal document record
+            if "foreign key constraint" in str(e).lower() or "violates foreign key" in str(e).lower():
+                logger.warning(f"Document {document_id} not found, this is expected for local testing")
+                # Re-raise with helpful message
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Document {document_id} does not exist. For local testing, ensure the case exists in the database."
+                )
+            raise
         
         logger.info(f"Created analysis job {job_id} for case {request.case_id}")
         

@@ -1,0 +1,18 @@
+From: Sarah Johnson <sjohnson@acmecorp.com>
+To: Mike Chen <mchen@acmecorp.com>
+Date: January 15, 2024
+Subject: Product Defect Report - Urgent
+
+Mike,
+
+I need to bring to your attention a serious issue with our Model X-500 product line. We've received 47 customer complaints in the past two weeks about overheating issues. Three customers reported minor burns.
+
+Our quality control team ran tests last week and confirmed the defect is in the thermal regulation circuit. The fix would cost approximately $2.3M to implement across all units.
+
+I recommend we issue a recall immediately. Legal is aware and advising we act quickly to minimize liability.
+
+Please advise on next steps.
+
+Sarah Johnson
+VP of Product Safety
+Acme Corporation
