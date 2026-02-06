@@ -1,8 +1,9 @@
 """
-Base agent class with Claude API integration.
+Base agent class with AWS Bedrock integration for Claude models.
 All agents inherit from this class for consistent error handling and API calls.
 """
-from anthropic import Anthropic
+import boto3
+import json
 import os
 from typing import Optional
 import logging
@@ -13,24 +14,33 @@ logger = logging.getLogger(__name__)
 class BaseAgent:
     """
     Base class for all AI agents in the pipeline.
-    Handles Claude API communication and error handling.
+    Handles AWS Bedrock Claude API communication and error handling.
     """
     
-    def __init__(self, name: str, model: str = "claude-sonnet-4-20250514"):
+    def __init__(self, name: str, model_id: Optional[str] = None):
         """
-        Initialize the base agent.
+        Initialize the base agent with AWS Bedrock.
         
         Args:
             name: Agent name for logging and identification
-            model: Claude model to use (default: claude-sonnet-4-20250514)
+            model_id: Bedrock model ID (e.g., anthropic.claude-sonnet-4-20250514-v1:0)
+                     If None, uses default Sonnet model
         """
         self.name = name
-        self.model = model
-        api_key = os.getenv("ANTHROPIC_API_KEY")
-        if not api_key:
-            raise ValueError("ANTHROPIC_API_KEY environment variable not set")
-        self.client = Anthropic(api_key=api_key)
-        logger.info(f"Initialized {self.name} with model {self.model}")
+        self.model_id = model_id or "anthropic.claude-sonnet-4-20250514-v1:0"
+        
+        # Initialize Bedrock client
+        try:
+            self.client = boto3.client(
+                "bedrock-runtime",
+                region_name=os.getenv("AWS_REGION", "us-east-1"),
+                aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+                aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY")
+            )
+            logger.info(f"Initialized {self.name} with Bedrock model {self.model_id}")
+        except Exception as e:
+            logger.error(f"Failed to initialize Bedrock client: {str(e)}")
+            raise
 
     def run(self, state: dict) -> dict:
         """
@@ -46,7 +56,7 @@ class BaseAgent:
 
     def _call_claude(self, system_prompt: str, user_prompt: str, max_tokens: int = 4096) -> str:
         """
-        Call Claude API with text prompts.
+        Call Claude via AWS Bedrock with text prompts.
         
         Args:
             system_prompt: System instructions for Claude
@@ -57,16 +67,25 @@ class BaseAgent:
             str: Claude's text response
         """
         try:
-            logger.debug(f"{self.name}: Calling Claude API")
-            response = self.client.messages.create(
-                model=self.model,
-                max_tokens=max_tokens,
-                system=system_prompt,
-                messages=[{"role": "user", "content": user_prompt}]
+            logger.debug(f"{self.name}: Calling Bedrock Claude API")
+            
+            body = json.dumps({
+                "anthropic_version": "bedrock-2023-05-31",
+                "max_tokens": max_tokens,
+                "system": system_prompt,
+                "messages": [{"role": "user", "content": user_prompt}]
+            })
+            
+            response = self.client.invoke_model(
+                modelId=self.model_id,
+                body=body
             )
-            return response.content[0].text
+            
+            result = json.loads(response["body"].read())
+            return result["content"][0]["text"]
+            
         except Exception as e:
-            logger.error(f"{self.name}: Claude API call failed: {str(e)}")
+            logger.error(f"{self.name}: Bedrock API call failed: {str(e)}")
             raise
 
     def _call_claude_structured(
@@ -77,7 +96,7 @@ class BaseAgent:
         max_tokens: int = 4096
     ) -> dict:
         """
-        Call Claude with tool_use to get structured JSON output.
+        Call Claude via Bedrock with tool_use to get structured JSON output.
         
         Args:
             system_prompt: System instructions for Claude
@@ -89,29 +108,37 @@ class BaseAgent:
             dict: Structured output matching the schema
         """
         try:
-            logger.debug(f"{self.name}: Calling Claude API with structured output")
-            response = self.client.messages.create(
-                model=self.model,
-                max_tokens=max_tokens,
-                system=system_prompt,
-                messages=[{"role": "user", "content": user_prompt}],
-                tools=[{
+            logger.debug(f"{self.name}: Calling Bedrock Claude API with structured output")
+            
+            body = json.dumps({
+                "anthropic_version": "bedrock-2023-05-31",
+                "max_tokens": max_tokens,
+                "system": system_prompt,
+                "messages": [{"role": "user", "content": user_prompt}],
+                "tools": [{
                     "name": "structured_output",
                     "description": "Return structured analysis results",
                     "input_schema": schema
                 }],
-                tool_choice={"type": "tool", "name": "structured_output"}
+                "tool_choice": {"type": "tool", "name": "structured_output"}
+            })
+            
+            response = self.client.invoke_model(
+                modelId=self.model_id,
+                body=body
             )
             
+            result = json.loads(response["body"].read())
+            
             # Extract tool use response
-            for block in response.content:
-                if block.type == "tool_use":
+            for block in result.get("content", []):
+                if block.get("type") == "tool_use":
                     logger.debug(f"{self.name}: Received structured output")
-                    return block.input
+                    return block.get("input", {})
             
             logger.warning(f"{self.name}: No tool_use block found in response")
             return {}
             
         except Exception as e:
-            logger.error(f"{self.name}: Structured Claude API call failed: {str(e)}")
+            logger.error(f"{self.name}: Structured Bedrock API call failed: {str(e)}")
             raise

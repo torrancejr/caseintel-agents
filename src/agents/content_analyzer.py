@@ -4,6 +4,7 @@ Generates comprehensive summaries, extracts key facts, identifies legal issues, 
 """
 from src.agents.base import BaseAgent
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -136,7 +137,9 @@ class ContentAnalyzer(BaseAgent):
     """
     
     def __init__(self):
-        super().__init__(name="ContentAnalyzer")
+        # Use Sonnet for complex content analysis
+        model_id = os.getenv("MODEL_CONTENT", "anthropic.claude-sonnet-4-20250514-v1:0")
+        super().__init__(name="ContentAnalyzer", model_id=model_id)
     
     def run(self, state: dict) -> dict:
         """

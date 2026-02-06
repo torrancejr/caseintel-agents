@@ -5,6 +5,7 @@ Scans for attorney-client privilege, work product, and confidentiality issues.
 from src.agents.base import BaseAgent
 from src.workflows.state import PrivilegeFlag
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -111,7 +112,9 @@ class PrivilegeChecker(BaseAgent):
     """
     
     def __init__(self):
-        super().__init__(name="PrivilegeChecker")
+        # Use Sonnet for complex privilege analysis
+        model_id = os.getenv("MODEL_PRIVILEGE", "anthropic.claude-sonnet-4-20250514-v1:0")
+        super().__init__(name="PrivilegeChecker", model_id=model_id)
     
     def run(self, state: dict) -> dict:
         """

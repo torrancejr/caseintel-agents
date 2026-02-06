@@ -4,6 +4,7 @@ Extracts dates, people, entities, and locations from legal documents.
 """
 from src.agents.base import BaseAgent
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -117,7 +118,9 @@ class MetadataExtractor(BaseAgent):
     """
     
     def __init__(self):
-        super().__init__(name="MetadataExtractor")
+        # Use Haiku for fast metadata extraction
+        model_id = os.getenv("MODEL_METADATA", "anthropic.claude-haiku-4-20250514-v1:0")
+        super().__init__(name="MetadataExtractor", model_id=model_id)
     
     def run(self, state: dict) -> dict:
         """

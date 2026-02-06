@@ -4,6 +4,7 @@ Links documents to related documents, builds timeline, and maps witness mentions
 """
 from src.agents.base import BaseAgent
 import logging
+import os
 from typing import Optional
 
 logger = logging.getLogger(__name__)
@@ -175,11 +176,13 @@ class CrossReferenceEngine(BaseAgent):
     def __init__(self, rag_retriever=None):
         """
         Initialize with optional RAG retriever for document similarity search.
+        Uses Haiku for cost-effective cross-referencing.
         
         Args:
             rag_retriever: Optional RAG retrieval service for finding related documents
         """
-        super().__init__(name="CrossReferenceEngine")
+        model_id = os.getenv("MODEL_CROSSREF", "anthropic.claude-haiku-4-20250514-v1:0")
+        super().__init__(name="CrossReferenceEngine", model_id=model_id)
         self.rag_retriever = rag_retriever
     
     def run(self, state: dict) -> dict:

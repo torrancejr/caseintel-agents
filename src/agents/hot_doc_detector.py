@@ -4,6 +4,7 @@ Flags documents containing smoking guns, contradictions, or case-critical conten
 """
 from src.agents.base import BaseAgent
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -142,7 +143,9 @@ class HotDocDetector(BaseAgent):
     """
     
     def __init__(self):
-        super().__init__(name="HotDocDetector")
+        # Use Sonnet for complex hot doc detection
+        model_id = os.getenv("MODEL_HOTDOC", "anthropic.claude-sonnet-4-20250514-v1:0")
+        super().__init__(name="HotDocDetector", model_id=model_id)
     
     def run(self, state: dict) -> dict:
         """

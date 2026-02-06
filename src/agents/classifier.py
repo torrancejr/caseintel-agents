@@ -5,6 +5,7 @@ Identifies the type of legal document uploaded.
 from src.agents.base import BaseAgent
 from src.workflows.state import DocumentType
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -94,7 +95,9 @@ class DocumentClassifier(BaseAgent):
     """
     
     def __init__(self):
-        super().__init__(name="DocumentClassifier")
+        # Use Haiku for fast, cost-effective classification
+        model_id = os.getenv("MODEL_CLASSIFIER", "anthropic.claude-haiku-4-20250514-v1:0")
+        super().__init__(name="DocumentClassifier", model_id=model_id)
     
     def run(self, state: dict) -> dict:
         """
