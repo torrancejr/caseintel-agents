@@ -176,12 +176,12 @@ class CrossReferenceEngine(BaseAgent):
     def __init__(self, rag_retriever=None):
         """
         Initialize with optional RAG retriever for document similarity search.
-        Uses Haiku for cost-effective cross-referencing.
+        Uses Haiku 4.5 for cost-effective cross-referencing.
         
         Args:
             rag_retriever: Optional RAG retrieval service for finding related documents
         """
-        model_id = os.getenv("MODEL_CROSSREF", "anthropic.claude-haiku-4-20250514-v1:0")
+        model_id = os.getenv("MODEL_CROSSREF", "anthropic.claude-haiku-4-5-20251001-v1:0")
         super().__init__(name="CrossReferenceEngine", model_id=model_id)
         self.rag_retriever = rag_retriever
     

@@ -95,8 +95,8 @@ class DocumentClassifier(BaseAgent):
     """
     
     def __init__(self):
-        # Use Haiku for fast, cost-effective classification
-        model_id = os.getenv("MODEL_CLASSIFIER", "anthropic.claude-haiku-4-20250514-v1:0")
+        # Use Haiku 4.5 for fast, cost-effective classification
+        model_id = os.getenv("MODEL_CLASSIFIER", "anthropic.claude-haiku-4-5-20251001-v1:0")
         super().__init__(name="DocumentClassifier", model_id=model_id)
     
     def run(self, state: dict) -> dict:

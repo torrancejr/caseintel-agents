@@ -29,8 +29,9 @@ We use different Claude models for different agents based on task complexity:
 
 1. Go to AWS Console → Bedrock → Model Access
 2. Request access to these models:
-   - `anthropic.claude-haiku-4-20250514-v1:0`
-   - `anthropic.claude-sonnet-4-20250514-v1:0`
+   - `anthropic.claude-haiku-4-5-20251001-v1:0` (Latest Haiku 4.5)
+   - `anthropic.claude-sonnet-4-5-20250929-v1:0` (Latest Sonnet 4.5)
+   - `anthropic.claude-sonnet-4-20250514-v1:0` (Sonnet 4 - optional fallback)
 3. Wait for approval (usually instant)
 
 ### 2. Create IAM User/Role
@@ -129,21 +130,21 @@ Approximate costs per 1M tokens (as of 2025):
 You can customize which model each agent uses by setting environment variables:
 
 ```bash
-# Use Sonnet for everything (higher quality, higher cost)
-MODEL_CLASSIFIER=anthropic.claude-sonnet-4-20250514-v1:0
-MODEL_METADATA=anthropic.claude-sonnet-4-20250514-v1:0
-MODEL_PRIVILEGE=anthropic.claude-sonnet-4-20250514-v1:0
-MODEL_HOTDOC=anthropic.claude-sonnet-4-20250514-v1:0
-MODEL_CONTENT=anthropic.claude-sonnet-4-20250514-v1:0
-MODEL_CROSSREF=anthropic.claude-sonnet-4-20250514-v1:0
+# Use Sonnet 4.5 for everything (highest quality, higher cost)
+MODEL_CLASSIFIER=anthropic.claude-sonnet-4-5-20250929-v1:0
+MODEL_METADATA=anthropic.claude-sonnet-4-5-20250929-v1:0
+MODEL_PRIVILEGE=anthropic.claude-sonnet-4-5-20250929-v1:0
+MODEL_HOTDOC=anthropic.claude-sonnet-4-5-20250929-v1:0
+MODEL_CONTENT=anthropic.claude-sonnet-4-5-20250929-v1:0
+MODEL_CROSSREF=anthropic.claude-sonnet-4-5-20250929-v1:0
 
-# Or use Haiku for everything (lower cost, still good quality)
-MODEL_CLASSIFIER=anthropic.claude-haiku-4-20250514-v1:0
-MODEL_METADATA=anthropic.claude-haiku-4-20250514-v1:0
-MODEL_PRIVILEGE=anthropic.claude-haiku-4-20250514-v1:0
-MODEL_HOTDOC=anthropic.claude-haiku-4-20250514-v1:0
-MODEL_CONTENT=anthropic.claude-haiku-4-20250514-v1:0
-MODEL_CROSSREF=anthropic.claude-haiku-4-20250514-v1:0
+# Or use Haiku 4.5 for everything (lower cost, still excellent quality)
+MODEL_CLASSIFIER=anthropic.claude-haiku-4-5-20251001-v1:0
+MODEL_METADATA=anthropic.claude-haiku-4-5-20251001-v1:0
+MODEL_PRIVILEGE=anthropic.claude-haiku-4-5-20251001-v1:0
+MODEL_HOTDOC=anthropic.claude-haiku-4-5-20251001-v1:0
+MODEL_CONTENT=anthropic.claude-haiku-4-5-20251001-v1:0
+MODEL_CROSSREF=anthropic.claude-haiku-4-5-20251001-v1:0
 ```
 
 ## Monitoring Costs

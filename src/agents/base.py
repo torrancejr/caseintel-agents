@@ -23,11 +23,11 @@ class BaseAgent:
         
         Args:
             name: Agent name for logging and identification
-            model_id: Bedrock model ID (e.g., anthropic.claude-sonnet-4-20250514-v1:0)
-                     If None, uses default Sonnet model
+            model_id: Bedrock model ID (e.g., anthropic.claude-sonnet-4-5-20250929-v1:0)
+                     If None, uses default Sonnet 4.5 model
         """
         self.name = name
-        self.model_id = model_id or "anthropic.claude-sonnet-4-20250514-v1:0"
+        self.model_id = model_id or "anthropic.claude-sonnet-4-5-20250929-v1:0"
         
         # Initialize Bedrock client
         try:
