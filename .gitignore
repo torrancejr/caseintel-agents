@@ -76,3 +76,8 @@ temp/
 # OS
 Thumbs.db
 .DS_Store
+service-config.json
+
+# Deployment scripts with sensitive info
+add_env_vars.sh
+ADD_ENV_VARS.md
