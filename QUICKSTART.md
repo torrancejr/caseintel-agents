@@ -1,366 +1,395 @@
-# CaseIntel AI Agents - Quick Start Guide
+# ⚡ CaseIntel Quick Start Guide
 
-Get up and running with CaseIntel AI Agents in 5 minutes!
+Get your CaseIntel AI Agents system running in 5 minutes!
 
 ## Prerequisites
 
-- Python 3.11 or higher
-- Docker and Docker Compose (optional, but recommended)
-- Anthropic API key
-- PostgreSQL database (or use Docker Compose)
+- Python 3.12 (already installed ✅)
+- Docker & Docker Compose
+- AWS Account with Bedrock access
+- Git (for version control)
 
-## Option 1: Docker Compose (Recommended)
+## Step 1: AWS Setup (2 minutes)
 
-### Step 1: Clone and Configure
+### Enable Bedrock Models
+
+1. Go to [AWS Bedrock Console](https://console.aws.amazon.com/bedrock)
+2. Navigate to **Model Access**
+3. Click **Enable specific models**
+4. Enable these models:
+   - ✅ Claude 3 Haiku (`anthropic.claude-3-haiku-20240307-v1:0`)
+   - ✅ Claude 3.5 Sonnet (`us.anthropic.claude-3-5-sonnet-20241022-v2:0`)
+   - ✅ Amazon Titan Embed Text v2 (`amazon.titan-embed-text-v2:0`)
+5. Wait 2-3 minutes for activation
+
+### Get AWS Credentials
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/caseintel-agents.git
-cd caseintel-agents
+# Option 1: Use AWS CLI
+aws configure
+# Enter your Access Key ID and Secret Access Key
 
-# Copy environment template
-cp .env.example .env
-
-# Edit .env with your API keys
-nano .env  # or use your preferred editor
+# Option 2: Get from IAM Console
+# Go to IAM → Users → Your User → Security Credentials
+# Create Access Key if needed
 ```
 
-### Step 2: Set Required Environment Variables
+## Step 2: Configure Environment (1 minute)
 
-Edit `.env` and set at minimum:
+Edit `.env` file and update these values:
 
 ```bash
-ANTHROPIC_API_KEY=sk-ant-your-key-here
-CASEINTEL_API_KEY=your-secure-random-key
-DATABASE_URL=postgresql://caseintel:caseintel_dev_password@postgres:5432/caseintel
+# Replace with your actual AWS credentials
+AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
+AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+AWS_REGION=us-east-1
+
+# Keep these as-is for development
+DATABASE_URL=postgresql://caseintel:caseintel_dev_password@localhost:5432/caseintel
+CASEINTEL_API_KEY=dev-api-key-change-in-production
 ```
 
-### Step 3: Start Services
+## Step 3: Verify Setup (1 minute)
 
 ```bash
-# Start all services (API + PostgreSQL)
-docker-compose up -d
+# Activate virtual environment
+source venv/bin/activate
 
-# View logs
-docker-compose logs -f api
-
-# Check health
-curl http://localhost:8000/health
-```
-
-### Step 4: Test the API
-
-```bash
-# Get API documentation
-open http://localhost:8000/docs
-
-# Test health endpoint
-curl http://localhost:8000/health
-
-# Submit a document for analysis
-curl -X POST http://localhost:8000/api/v1/analyze \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: your-secure-random-key" \
-  -d '{
-    "document_url": "https://example.com/document.pdf",
-    "case_id": "case123"
-  }'
-
-# Check job status (use job_id from previous response)
-curl http://localhost:8000/api/v1/status/{job_id} \
-  -H "X-API-Key: your-secure-random-key"
-```
-
-## Option 2: Local Development
-
-### Step 1: Set Up Python Environment
-
-```bash
-# Create virtual environment
-python3.11 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-### Step 2: Set Up PostgreSQL
-
-```bash
-# Install PostgreSQL (if not already installed)
-# macOS: brew install postgresql
-# Ubuntu: sudo apt-get install postgresql
-
-# Create database
-createdb caseintel
-
-# Update DATABASE_URL in .env
-DATABASE_URL=postgresql://yourusername@localhost:5432/caseintel
-```
-
-### Step 3: Configure Environment
-
-```bash
-# Copy environment template
-cp .env.example .env
-
-# Edit with your settings
-nano .env
-```
-
-Required variables:
-```bash
-ANTHROPIC_API_KEY=sk-ant-your-key-here
-DATABASE_URL=postgresql://user@localhost:5432/caseintel
-CASEINTEL_API_KEY=your-secure-random-key
-CHROMA_PERSIST_DIR=./chroma_db
-ENVIRONMENT=development
-```
-
-### Step 4: Run the Application
-
-```bash
-# Run with uvicorn
-uvicorn src.api.main:app --reload --port 8000
-
-# Or run directly
-python -m src.api.main
-```
-
-### Step 5: Verify Setup
-
-```bash
 # Run verification script
 python scripts/verify_setup.py
-
-# Seed vector database (optional)
-python scripts/seed_vectors.py
-
-# Run tests
-pytest tests/ -v
 ```
 
-## Quick API Examples
+Expected output:
+```
+✅ All required environment variables set
+✅ Model configuration complete
+✅ All required Python modules installed
+✅ All agents imported successfully
+✅ Database connection successful
+✅ AWS Bedrock access successful
+✅ Embedding model working: amazon.titan-embed-text-v2:0
+✅ ChromaDB working
+```
 
-### 1. Analyze a Document
+## Step 4: Start Services (1 minute)
+
+```bash
+# Start PostgreSQL and ChromaDB
+docker-compose up -d
+
+# Wait 10 seconds for services to start
+sleep 10
+
+# Start the API
+uvicorn src.api.main:app --reload
+```
+
+## Step 5: Test the API (30 seconds)
+
+### Health Check
+
+```bash
+curl http://localhost:8000/health
+```
+
+Expected response:
+```json
+{
+  "status": "healthy",
+  "timestamp": "2026-02-05T...",
+  "version": "1.0.0"
+}
+```
+
+### API Documentation
+
+Open in browser: http://localhost:8000/docs
+
+You should see the interactive API documentation!
+
+## Your First Document Analysis
+
+### Analyze a Document
 
 ```bash
 curl -X POST http://localhost:8000/api/v1/analyze \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: your-api-key" \
+  -H "X-API-Key: dev-api-key-change-in-production" \
   -d '{
-    "document_url": "https://s3.amazonaws.com/bucket/contract.pdf",
-    "case_id": "case_001",
-    "callback_url": "https://yourapp.com/webhook"
+    "case_id": "case-001",
+    "document_id": "doc-001",
+    "document_text": "CONFIDENTIAL ATTORNEY-CLIENT COMMUNICATION\n\nDear Client,\n\nThis email discusses our legal strategy for the upcoming trial. We believe the opposing party'\''s key witness testimony can be challenged based on inconsistencies in their deposition.\n\nBest regards,\nJohn Smith, Esq.",
+    "document_metadata": {
+      "filename": "email_2024_01_15.pdf",
+      "source": "email",
+      "date": "2024-01-15"
+    }
   }'
 ```
 
-Response:
+### Expected Response
+
 ```json
 {
-  "job_id": "550e8400-e29b-41d4-a716-446655440000",
-  "status": "queued",
-  "message": "Document analysis queued successfully"
+  "document_id": "doc-001",
+  "status": "completed",
+  "results": {
+    "classification": {
+      "document_type": "email",
+      "confidence": 0.95
+    },
+    "metadata": {
+      "date": "2024-01-15",
+      "author": "John Smith, Esq.",
+      "subject": "Legal Strategy Discussion"
+    },
+    "privilege": {
+      "is_privileged": true,
+      "confidence": 0.98,
+      "reasoning": "Contains attorney-client communication discussing legal strategy"
+    },
+    "hot_doc": {
+      "is_hot": true,
+      "importance_score": 0.85,
+      "reasoning": "Discusses key witness testimony and trial strategy"
+    },
+    "content_analysis": {
+      "summary": "Attorney email to client discussing trial strategy...",
+      "key_points": [
+        "Legal strategy discussion",
+        "Witness testimony challenges",
+        "Deposition inconsistencies"
+      ]
+    }
+  }
 }
 ```
 
-### 2. Check Job Status
+## Common Commands
 
+### Start Services
 ```bash
-curl http://localhost:8000/api/v1/status/550e8400-e29b-41d4-a716-446655440000 \
-  -H "X-API-Key: your-api-key"
+docker-compose up -d
+uvicorn src.api.main:app --reload
 ```
 
-Response:
-```json
-{
-  "job_id": "550e8400-e29b-41d4-a716-446655440000",
-  "status": "processing",
-  "current_agent": "MetadataExtractor",
-  "progress_percent": 35,
-  "agents_completed": ["DocumentClassifier"],
-  "started_at": "2024-01-15T10:30:00Z"
-}
-```
-
-### 3. Get Results
-
+### Stop Services
 ```bash
-curl http://localhost:8000/api/v1/results/550e8400-e29b-41d4-a716-446655440000 \
-  -H "X-API-Key: your-api-key"
+# Stop API (Ctrl+C in terminal)
+# Stop Docker services
+docker-compose down
 ```
 
-### 4. Ask AI a Question
-
+### View Logs
 ```bash
-curl -X POST http://localhost:8000/api/v1/ask \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: your-api-key" \
-  -d '{
-    "case_id": "case_001",
-    "question": "What are the key terms of the employment agreement?"
-  }'
+# API logs (in terminal where uvicorn is running)
+
+# Docker logs
+docker-compose logs -f postgres
+docker-compose logs -f
 ```
 
-### 5. Get Case Timeline
-
+### Restart Services
 ```bash
-curl http://localhost:8000/api/v1/case/case_001/timeline \
-  -H "X-API-Key: your-api-key"
+docker-compose restart
 ```
 
-### 6. Get Case Witnesses
-
+### Check Service Status
 ```bash
-curl http://localhost:8000/api/v1/case/case_001/witnesses \
-  -H "X-API-Key: your-api-key"
+docker-compose ps
 ```
 
-## Accessing API Documentation
+## API Endpoints Quick Reference
 
-Once the server is running, visit:
-
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
-
-These provide interactive API documentation where you can test endpoints directly.
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/health` | GET | Health check |
+| `/api/v1/analyze` | POST | Analyze document |
+| `/api/v1/status/{doc_id}` | GET | Get analysis status |
+| `/api/v1/search` | POST | Semantic search |
+| `/api/v1/hot-docs/{case_id}` | GET | Get hot documents |
+| `/api/v1/privileged/{case_id}` | GET | Get privileged docs |
+| `/api/v1/cross-references/{doc_id}` | GET | Get related docs |
 
 ## Troubleshooting
 
-### Database Connection Issues
+### API Won't Start
+
+```bash
+# Check if port 8000 is in use
+lsof -i :8000
+
+# Kill the process
+kill -9 <PID>
+
+# Try again
+uvicorn src.api.main:app --reload
+```
+
+### Database Connection Error
 
 ```bash
 # Check if PostgreSQL is running
 docker-compose ps
 
-# View database logs
-docker-compose logs postgres
-
-# Restart database
+# Restart PostgreSQL
 docker-compose restart postgres
+
+# Check logs
+docker-compose logs postgres
 ```
 
-### API Key Issues
+### AWS Credentials Error
 
 ```bash
-# Verify API key is set
-echo $CASEINTEL_API_KEY
+# Test credentials
+aws sts get-caller-identity
 
-# Check .env file
-cat .env | grep CASEINTEL_API_KEY
+# If error, reconfigure
+aws configure
 ```
 
-### Anthropic API Issues
+### Model Access Error
+
+1. Go to AWS Console → Bedrock → Model Access
+2. Verify models are enabled (green checkmark)
+3. Wait 2-3 minutes if just enabled
+4. Test again: `python scripts/test_bedrock.py`
+
+### Import Errors
 
 ```bash
-# Test Anthropic API key
-curl https://api.anthropic.com/v1/messages \
-  -H "x-api-key: $ANTHROPIC_API_KEY" \
-  -H "anthropic-version: 2023-06-01" \
-  -H "content-type: application/json" \
-  -d '{
-    "model": "claude-sonnet-4-20250514",
-    "max_tokens": 1024,
-    "messages": [{"role": "user", "content": "Hello"}]
-  }'
-```
+# Reinstall dependencies
+pip install -r requirements.txt
 
-### View Logs
-
-```bash
-# Docker Compose logs
-docker-compose logs -f api
-
-# Local development logs
-# Logs are printed to console when running with --reload
-```
-
-### Reset Everything
-
-```bash
-# Stop and remove all containers
-docker-compose down -v
-
-# Remove ChromaDB data
-rm -rf chroma_db/
-
-# Start fresh
-docker-compose up -d
+# Verify imports
+python -c "import fastapi, boto3, chromadb, langgraph"
 ```
 
 ## Next Steps
 
-1. **Read the full documentation**: See `README.md` for detailed information
-2. **Review the specification**: Check `CASEINTEL_AGENTS.md` for system design
-3. **Explore the code**: Start with `src/api/main.py` and `src/workflows/discovery_pipeline.py`
-4. **Run tests**: `pytest tests/ -v`
-5. **Customize agents**: Modify system prompts in `src/agents/` files
-6. **Deploy to production**: See deployment section in `README.md`
+### 1. Process More Documents
 
-## Common Use Cases
+Use the `/api/v1/analyze` endpoint to process your documents.
 
-### Analyze a Contract
+### 2. Search Documents
 
-```python
-import requests
+Use semantic search to find relevant documents:
 
-response = requests.post(
-    "http://localhost:8000/api/v1/analyze",
-    headers={
-        "Content-Type": "application/json",
-        "X-API-Key": "your-api-key"
-    },
-    json={
-        "document_url": "https://example.com/contract.pdf",
-        "case_id": "case_001"
-    }
-)
-
-job_id = response.json()["job_id"]
-print(f"Job ID: {job_id}")
+```bash
+curl -X POST http://localhost:8000/api/v1/search \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: dev-api-key-change-in-production" \
+  -d '{
+    "case_id": "case-001",
+    "query": "attorney-client privilege",
+    "top_k": 5
+  }'
 ```
 
-### Poll for Results
+### 3. Get Hot Documents
 
-```python
-import time
-import requests
-
-def wait_for_completion(job_id, api_key):
-    while True:
-        response = requests.get(
-            f"http://localhost:8000/api/v1/status/{job_id}",
-            headers={"X-API-Key": api_key}
-        )
-        status = response.json()
-        
-        print(f"Progress: {status['progress_percent']}% - {status['current_agent']}")
-        
-        if status["status"] == "completed":
-            break
-        
-        time.sleep(2)
-    
-    # Get results
-    response = requests.get(
-        f"http://localhost:8000/api/v1/results/{job_id}",
-        headers={"X-API-Key": api_key}
-    )
-    return response.json()
-
-results = wait_for_completion(job_id, "your-api-key")
-print(f"Document Type: {results['classification']['document_type']}")
-print(f"Summary: {results['analysis']['summary']}")
+```bash
+curl http://localhost:8000/api/v1/hot-docs/case-001 \
+  -H "X-API-Key: dev-api-key-change-in-production"
 ```
+
+### 4. Monitor Costs
+
+- Go to AWS Console → Cost Explorer
+- Filter by Service: "Amazon Bedrock"
+- Set up budget alerts
+
+### 5. Customize Configuration
+
+Edit `.env` to:
+- Change API keys
+- Adjust model selection
+- Configure S3 bucket
+- Set log levels
+
+### 6. Deploy to Production
+
+When ready:
+1. Update `.env` with production models
+2. Use production database (RDS)
+3. Deploy with Docker Compose
+4. Set up monitoring and alerts
+
+## Development Tips
+
+### Use API Documentation
+
+The interactive docs at http://localhost:8000/docs let you:
+- Test all endpoints
+- See request/response schemas
+- Try different parameters
+- View authentication requirements
+
+### Monitor Logs
+
+Keep an eye on logs for:
+- Processing times
+- Error messages
+- Token usage
+- Cost estimates
+
+### Test with Small Documents
+
+Start with small documents (1-2 pages) to:
+- Verify functionality
+- Check quality
+- Estimate costs
+- Debug issues
+
+### Use Development Models
+
+Your current setup uses cost-effective models:
+- Claude 3.5 Sonnet for complex tasks
+- Claude 3 Haiku for simple tasks
+- Same pricing as Claude 4.5
+- Proven and stable
+
+## Resources
+
+- **API Docs**: http://localhost:8000/docs
+- **Project Summary**: PROJECT_SUMMARY.md
+- **Setup Guide**: SETUP_COMPLETE.md
+- **Model Guide**: DEVELOPMENT_MODELS.md
+- **Bedrock Setup**: BEDROCK_SETUP.md
+- **Full README**: README.md
 
 ## Support
 
-- **Documentation**: See `README.md` and `CASEINTEL_AGENTS.md`
-- **Issues**: Open an issue on GitHub
-- **Email**: support@caseintel.io
+Need help?
 
-## Success! 🎉
+1. Run verification: `python scripts/verify_setup.py`
+2. Test Bedrock: `python scripts/test_bedrock.py`
+3. Check logs: `docker-compose logs -f`
+4. Review documentation files
+5. Check AWS Bedrock console
 
-You're now ready to use CaseIntel AI Agents for legal document analysis!
+## Summary
 
-Visit http://localhost:8000/docs to explore the API interactively.
+✅ **5-Minute Setup**
+1. Enable AWS Bedrock models (2 min)
+2. Configure `.env` (1 min)
+3. Verify setup (1 min)
+4. Start services (1 min)
+5. Test API (30 sec)
+
+✅ **You're Ready!**
+- 6 AI agents running
+- RAG system active
+- API endpoints available
+- Documentation complete
+
+**Start analyzing documents now!** 🚀
+
+```bash
+# Quick test
+curl -X POST http://localhost:8000/api/v1/analyze \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: dev-api-key-change-in-production" \
+  -d '{"case_id":"test","document_id":"test-1","document_text":"Test document"}'
+```

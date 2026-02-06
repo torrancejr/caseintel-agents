@@ -1,290 +1,339 @@
-# 🚀 CaseIntel AI Agents - Ready to Use!
+# 🚀 Ready to Use - Quick Start
 
-## ✅ Setup Complete
+Your CaseIntel AI Agents project is fully configured and ready to use!
 
-Your CaseIntel AI Agents project is fully configured and ready to analyze legal documents with AWS Bedrock and Claude 4.5!
+## Quick Setup (3 Steps)
 
-## 📊 Current Configuration
+### 1. Update AWS Credentials
 
-### Models (Claude 4.5 - Latest)
-- **Haiku 4.5** (20251001): Classifier, Metadata, Cross-Reference
-- **Sonnet 4.5** (20250929): Privilege, Hot Docs, Content Analysis
+Edit `.env` file:
 
-### Cost Optimization
-- **67% cost reduction** vs all-Sonnet approach
-- **Same quality** with intelligent model selection
-- **$0.15 per document** (typical 10K tokens)
+```bash
+# Replace these with your actual AWS credentials
+AWS_ACCESS_KEY_ID=your-actual-aws-access-key
+AWS_SECRET_ACCESS_KEY=your-actual-aws-secret-key
+AWS_REGION=us-east-1
+```
 
-### AWS Bedrock
-- ✅ Models enabled in your AWS account
-- ✅ Latest Claude 4.5 versions
-- ✅ Optimized for legal document analysis
-
-## 🎯 Quick Start
-
-### 1. Test Your Bedrock Connection
+### 2. Verify Setup
 
 ```bash
 source venv/bin/activate
+python scripts/verify_setup.py
+```
+
+### 3. Start Services
+
+```bash
+# Start database and vector store
+docker-compose up -d
+
+# Run the API
+uvicorn src.api.main:app --reload
+```
+
+That's it! Your API is now running at http://localhost:8000
+
+## Test Your Setup
+
+### Health Check
+
+```bash
+curl http://localhost:8000/health
+```
+
+Expected response:
+```json
+{
+  "status": "healthy",
+  "timestamp": "2026-02-05T...",
+  "version": "1.0.0"
+}
+```
+
+### API Documentation
+
+Open in browser: http://localhost:8000/docs
+
+### Test Bedrock Connection
+
+```bash
 python scripts/test_bedrock.py
 ```
 
-Expected output:
-```
-✅ PASS - Claude Haiku 4.5 (Fast & Cost-Effective)
-✅ PASS - Claude Sonnet 4.5 (Complex Reasoning)
-🎉 All tests passed!
-```
+## What's Configured
 
-### 2. Start the API
+✅ **6 AI Agents** - All using AWS Bedrock
+- Document Classifier (Claude 3 Haiku)
+- Metadata Extractor (Claude 3 Haiku)
+- Privilege Checker (Claude 3.5 Sonnet)
+- Hot Doc Detector (Claude 3.5 Sonnet)
+- Content Analyzer (Claude 3.5 Sonnet)
+- Cross-Reference Engine (Claude 3 Haiku)
 
-**Option A: Docker (Recommended)**
+✅ **RAG System** - Amazon Titan embeddings
+- ChromaDB vector store
+- 1024-dimensional embeddings
+- Case-isolated collections
+
+✅ **Database** - PostgreSQL
+- Document storage
+- Case management
+- Analysis results
+
+✅ **API** - FastAPI
+- 7 REST endpoints
+- OpenAPI documentation
+- Authentication ready
+
+## Development Models (Active)
+
+You're using cost-effective development models:
+
+| Agent | Model | Cost per 10K tokens |
+|-------|-------|---------------------|
+| Classifier | Claude 3 Haiku | $0.0025 |
+| Metadata | Claude 3 Haiku | $0.0025 |
+| Privilege | Claude 3.5 Sonnet | $0.03 |
+| Hot Doc | Claude 3.5 Sonnet | $0.03 |
+| Content | Claude 3.5 Sonnet | $0.03 |
+| Cross-Ref | Claude 3 Haiku | $0.0025 |
+| Embeddings | Amazon Titan | $0.02 per 1M |
+
+## API Endpoints
+
+### 1. Health Check
 ```bash
-docker-compose up -d
+GET /health
 ```
 
-**Option B: Local Development**
+### 2. Analyze Document
 ```bash
-source venv/bin/activate
-uvicorn src.api.main:app --reload --port 8000
+POST /api/v1/analyze
+Content-Type: application/json
+
+{
+  "case_id": "case-123",
+  "document_id": "doc-456",
+  "document_text": "Your document text here...",
+  "document_metadata": {
+    "filename": "contract.pdf",
+    "source": "discovery"
+  }
+}
 ```
 
-### 3. Access the API
+### 3. Get Analysis Status
+```bash
+GET /api/v1/status/{document_id}
+```
 
-- **API**: http://localhost:8000
-- **Interactive Docs**: http://localhost:8000/docs
-- **Health Check**: http://localhost:8000/health
+### 4. Search Documents
+```bash
+POST /api/v1/search
+Content-Type: application/json
 
-### 4. Analyze Your First Document
+{
+  "case_id": "case-123",
+  "query": "confidential agreements",
+  "top_k": 5
+}
+```
+
+### 5. Get Hot Documents
+```bash
+GET /api/v1/hot-docs/{case_id}
+```
+
+### 6. Get Privileged Documents
+```bash
+GET /api/v1/privileged/{case_id}
+```
+
+### 7. Get Cross-References
+```bash
+GET /api/v1/cross-references/{document_id}
+```
+
+## Example Workflow
+
+### 1. Upload and Analyze a Document
 
 ```bash
 curl -X POST http://localhost:8000/api/v1/analyze \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: your-api-key" \
+  -H "X-API-Key: dev-api-key-change-in-production" \
   -d '{
-    "document_url": "https://example.com/contract.pdf",
-    "case_id": "case_001"
+    "case_id": "case-001",
+    "document_id": "doc-001",
+    "document_text": "CONFIDENTIAL ATTORNEY-CLIENT COMMUNICATION\n\nThis email discusses legal strategy for the upcoming trial...",
+    "document_metadata": {
+      "filename": "email_2024_01_15.pdf",
+      "source": "email",
+      "date": "2024-01-15"
+    }
   }'
 ```
 
-Response:
-```json
-{
-  "job_id": "550e8400-e29b-41d4-a716-446655440000",
-  "status": "queued",
-  "message": "Document analysis started"
-}
-```
-
-### 5. Check Progress
+### 2. Check Analysis Status
 
 ```bash
-curl http://localhost:8000/api/v1/status/550e8400-e29b-41d4-a716-446655440000 \
-  -H "X-API-Key: your-api-key"
+curl http://localhost:8000/api/v1/status/doc-001 \
+  -H "X-API-Key: dev-api-key-change-in-production"
 ```
 
-Response:
-```json
-{
-  "job_id": "550e8400-e29b-41d4-a716-446655440000",
-  "status": "processing",
-  "current_agent": "PrivilegeChecker",
-  "progress_percent": 50,
-  "agents_completed": ["DocumentClassifier", "MetadataExtractor"]
-}
-```
-
-### 6. Get Results
+### 3. Search Similar Documents
 
 ```bash
-curl http://localhost:8000/api/v1/results/550e8400-e29b-41d4-a716-446655440000 \
-  -H "X-API-Key": your-api-key"
+curl -X POST http://localhost:8000/api/v1/search \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: dev-api-key-change-in-production" \
+  -d '{
+    "case_id": "case-001",
+    "query": "attorney-client privilege",
+    "top_k": 5
+  }'
 ```
 
-## 📚 Documentation
-
-| Document | Purpose |
-|----------|---------|
-| **CLAUDE_45_UPGRADE.md** | Claude 4.5 upgrade details |
-| **BEDROCK_SETUP.md** | Complete Bedrock setup guide |
-| **BEDROCK_MIGRATION_COMPLETE.md** | Migration summary |
-| **QUICKSTART.md** | Quick start guide |
-| **README.md** | Full documentation |
-| **PROJECT_SUMMARY.md** | Project overview |
-
-## 🔧 Configuration Files
-
-### Environment Variables (.env)
+### 4. Get Hot Documents
 
 ```bash
-# AWS Bedrock
-AWS_ACCESS_KEY_ID=your_key
-AWS_SECRET_ACCESS_KEY=your_secret
-AWS_REGION=us-east-1
+curl http://localhost:8000/api/v1/hot-docs/case-001 \
+  -H "X-API-Key: dev-api-key-change-in-production"
+```
 
-# Model Configuration (Claude 4.5)
+## Monitoring
+
+### Check Logs
+
+```bash
+# API logs
+docker-compose logs -f api
+
+# Database logs
+docker-compose logs -f postgres
+
+# All services
+docker-compose logs -f
+```
+
+### Check AWS Costs
+
+1. Go to AWS Console → Cost Explorer
+2. Filter by Service: "Amazon Bedrock"
+3. Group by: Model ID
+
+### Set Budget Alerts
+
+```bash
+# AWS Console → Budgets → Create Budget
+# Set alert for daily Bedrock costs
+```
+
+## Troubleshooting
+
+### API Not Starting
+
+```bash
+# Check if port 8000 is in use
+lsof -i :8000
+
+# Kill process if needed
+kill -9 <PID>
+
+# Restart API
+uvicorn src.api.main:app --reload
+```
+
+### Database Connection Error
+
+```bash
+# Check if PostgreSQL is running
+docker-compose ps
+
+# Restart PostgreSQL
+docker-compose restart postgres
+
+# Check logs
+docker-compose logs postgres
+```
+
+### AWS Credentials Error
+
+```bash
+# Test AWS credentials
+aws sts get-caller-identity
+
+# If not working, reconfigure
+aws configure
+```
+
+### Model Access Error
+
+1. Go to AWS Console → Bedrock → Model Access
+2. Enable required models:
+   - Claude 3 Haiku
+   - Claude 3.5 Sonnet
+   - Amazon Titan Embed Text v2
+3. Wait 2-3 minutes for activation
+4. Test again
+
+## Switching to Production
+
+When ready for production:
+
+1. Update `.env`:
+```bash
+ENVIRONMENT=production
+
+# Comment out development models
+# MODEL_CLASSIFIER=anthropic.claude-3-haiku-20240307-v1:0
+
+# Uncomment production models
 MODEL_CLASSIFIER=anthropic.claude-haiku-4-5-20251001-v1:0
 MODEL_METADATA=anthropic.claude-haiku-4-5-20251001-v1:0
 MODEL_PRIVILEGE=anthropic.claude-sonnet-4-5-20250929-v1:0
 MODEL_HOTDOC=anthropic.claude-sonnet-4-5-20250929-v1:0
 MODEL_CONTENT=anthropic.claude-sonnet-4-5-20250929-v1:0
 MODEL_CROSSREF=anthropic.claude-haiku-4-5-20251001-v1:0
-
-# API Security
-CASEINTEL_API_KEY=your-secure-api-key
-
-# Database
-DATABASE_URL=postgresql://caseintel:password@localhost:5432/caseintel
-
-# Vector Database
-CHROMA_PERSIST_DIR=./chroma_db
 ```
 
-## 🎯 What Each Agent Does
-
-### 1. Document Classifier (Haiku 4.5)
-- Identifies document type (contract, email, deposition, etc.)
-- 10 document categories
-- Confidence scoring
-
-### 2. Metadata Extractor (Haiku 4.5)
-- Extracts dates, people, entities, locations
-- Source citations with page numbers
-- Deduplication and normalization
-
-### 3. Privilege Checker (Sonnet 4.5)
-- Detects attorney-client privilege
-- Identifies work product
-- Flags confidentiality issues
-
-### 4. Hot Doc Detector (Sonnet 4.5)
-- Finds smoking guns
-- Identifies admissions
-- Flags contradictions
-
-### 5. Content Analyzer (Sonnet 4.5)
-- Generates executive summaries
-- Extracts key facts
-- Identifies legal issues
-- Drafts narratives
-
-### 6. Cross-Reference Engine (Haiku 4.5)
-- Links related documents
-- Builds case timeline
-- Maps witness mentions
-- Tracks consistency
-
-## 📊 API Endpoints
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/health` | GET | Health check |
-| `/api/v1/analyze` | POST | Submit document |
-| `/api/v1/status/{job_id}` | GET | Check progress |
-| `/api/v1/results/{job_id}` | GET | Get results |
-| `/api/v1/ask` | POST | Ask AI questions |
-| `/api/v1/case/{case_id}/timeline` | GET | Case timeline |
-| `/api/v1/case/{case_id}/witnesses` | GET | Witness map |
-
-## 🔍 Monitoring
-
-### CloudWatch Metrics
+2. Restart services:
 ```bash
-AWS Console → CloudWatch → Metrics → Bedrock
+docker-compose restart
 ```
 
-### Cost Explorer
-```bash
-AWS Console → Cost Explorer → Filter by "Amazon Bedrock"
-```
+No code changes needed!
 
-### Application Logs
-```bash
-# Docker
-docker-compose logs -f api
+## Documentation
 
-# Local
-# Logs print to console
-```
+- **README.md** - Full project documentation
+- **QUICKSTART.md** - Detailed quick start guide
+- **SETUP_COMPLETE.md** - Complete setup summary
+- **DEVELOPMENT_MODELS.md** - Model configuration guide
+- **BEDROCK_SETUP.md** - AWS Bedrock setup
+- **CLAUDE_45_UPGRADE.md** - Claude 4.5 information
 
-## 🐛 Troubleshooting
+## Support
 
-### Test Connection
-```bash
-python scripts/test_bedrock.py
-```
+Need help?
 
-### Common Issues
+1. Run verification: `python scripts/verify_setup.py`
+2. Check documentation files
+3. Review API docs: http://localhost:8000/docs
+4. Check AWS Bedrock console
+5. Review CloudWatch logs
 
-**"Model not found"**
-- Enable models in AWS Console → Bedrock → Model Access
-- Use `us-east-1` region for best availability
+## Summary
 
-**"Access Denied"**
-- Check IAM policy includes `bedrock:InvokeModel`
-- Verify AWS credentials in `.env`
+✅ All agents configured with AWS Bedrock
+✅ Development models active (Claude 3.5/3)
+✅ RAG system using Amazon Titan embeddings
+✅ PostgreSQL and ChromaDB ready
+✅ FastAPI with 7 endpoints
+✅ Docker deployment configured
+✅ Production models ready to enable
 
-**"Connection refused"**
-- Ensure PostgreSQL is running (if using Docker Compose)
-- Check port 8000 is not in use
+**You're ready to start analyzing documents!** 🎉
 
-## 📈 Performance
-
-### Typical Document (10K tokens)
-
-| Agent | Model | Time | Cost |
-|-------|-------|------|------|
-| Classifier | Haiku 4.5 | ~1s | $0.003 |
-| Metadata | Haiku 4.5 | ~2s | $0.003 |
-| Privilege | Sonnet 4.5 | ~3s | $0.045 |
-| Hot Doc | Sonnet 4.5 | ~3s | $0.045 |
-| Content | Sonnet 4.5 | ~4s | $0.045 |
-| Cross-Ref | Haiku 4.5 | ~2s | $0.003 |
-| **Total** | **Mixed** | **~15s** | **~$0.15** |
-
-## 🎓 Next Steps
-
-1. ✅ **Test Bedrock**: `python scripts/test_bedrock.py`
-2. ✅ **Start API**: `docker-compose up -d`
-3. ✅ **Analyze document**: Use curl or Swagger UI
-4. ✅ **Monitor costs**: Check CloudWatch
-5. ✅ **Adjust models**: Edit `.env` if needed
-
-## 🔗 Resources
-
-- **GitHub**: https://github.com/torrancejr/caseintel-agents
-- **AWS Bedrock**: https://docs.aws.amazon.com/bedrock/
-- **Claude Docs**: https://docs.anthropic.com/claude/
-- **FastAPI Docs**: https://fastapi.tiangolo.com/
-
-## 💡 Tips
-
-- Use Swagger UI (`/docs`) to explore the API interactively
-- Monitor costs daily for the first week
-- Adjust model assignments based on your quality/cost needs
-- Use the Ask AI endpoint to query across all case documents
-- Check the timeline and witness endpoints for case insights
-
-## ✨ You're All Set!
-
-Your CaseIntel AI Agents are ready to analyze legal documents with:
-- ✅ Latest Claude 4.5 models
-- ✅ AWS Bedrock integration
-- ✅ 67% cost optimization
-- ✅ 6 specialized AI agents
-- ✅ Complete documentation
-
-**Start analyzing documents now!** 🚀
-
-```bash
-# Quick test
-python scripts/test_bedrock.py
-
-# Start the API
-docker-compose up -d
-
-# Open docs
-open http://localhost:8000/docs
-```
-
-Happy analyzing! 🎉
+Just update your AWS credentials and run `python scripts/verify_setup.py`.

@@ -8,7 +8,7 @@ from src.models.schemas import (
     ClassificationResult, MetadataResult, PrivilegeResult, HotDocResult,
     AnalysisResult, CrossReferenceResult
 )
-from src.models.database import AnalysisJob, AnalysisResult as DBAnalysisResult, TimelineEvent, WitnessMention
+from src.models.database import AnalysisJob, AnalysisResult as DBAnalysisResult, AgentTimelineEvent, WitnessMention
 from src.api.dependencies import verify_api_key, get_db_session
 from typing import List
 import logging
@@ -177,9 +177,9 @@ async def get_case_timeline(
     Aggregates timeline events from all analyzed documents.
     """
     try:
-        events = db.query(TimelineEvent).filter(
-            TimelineEvent.case_id == case_id
-        ).order_by(TimelineEvent.date).all()
+        events = db.query(AgentTimelineEvent).filter(
+            AgentTimelineEvent.case_id == case_id
+        ).order_by(AgentTimelineEvent.event_date).all()
         
         event_list = []
         for event in events:

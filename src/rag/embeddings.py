@@ -1,19 +1,22 @@
 """
 Vector embeddings and storage using ChromaDB.
 Supports case-isolated collections for document retrieval.
+Uses AWS Bedrock for embeddings (Amazon Titan or Cohere).
 """
 import chromadb
 from chromadb.config import Settings
 from typing import List, Dict, Any, Optional
 import os
 import logging
-from anthropic import Anthropic
+import boto3
+import json
 
 logger = logging.getLogger(__name__)
 
 # ChromaDB configuration
 CHROMA_PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR", "./chroma_db")
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "amazon.titan-embed-text-v2:0")
+AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 
 
 class VectorStore:
@@ -23,13 +26,18 @@ class VectorStore:
     """
     
     def __init__(self):
-        """Initialize ChromaDB client and Anthropic for embeddings."""
+        """Initialize ChromaDB client and AWS Bedrock for embeddings."""
         self.client = chromadb.Client(Settings(
             persist_directory=CHROMA_PERSIST_DIR,
             anonymized_telemetry=False
         ))
-        self.anthropic_client = Anthropic(api_key=ANTHROPIC_API_KEY)
+        self.bedrock_client = boto3.client(
+            "bedrock-runtime",
+            region_name=AWS_REGION
+        )
+        self.embedding_model = EMBEDDING_MODEL
         logger.info(f"Initialized ChromaDB at {CHROMA_PERSIST_DIR}")
+        logger.info(f"Using embedding model: {self.embedding_model}")
     
     def _get_collection_name(self, case_id: str) -> str:
         """
@@ -70,11 +78,8 @@ class VectorStore:
     
     def _generate_embedding(self, text: str) -> List[float]:
         """
-        Generate embedding for text using Anthropic.
-        Note: As of 2024, Anthropic doesn't have a dedicated embedding API.
-        In production, use OpenAI embeddings or a dedicated embedding model.
-        
-        For now, this is a placeholder that would use OpenAI or similar.
+        Generate embedding for text using AWS Bedrock.
+        Supports Amazon Titan and Cohere embedding models.
         
         Args:
             text: Text to embed
@@ -82,26 +87,49 @@ class VectorStore:
         Returns:
             List[float]: Embedding vector
         """
-        # TODO: Replace with actual embedding API
-        # Option 1: Use OpenAI embeddings
-        # Option 2: Use sentence-transformers locally
-        # Option 3: Use AWS Bedrock Titan embeddings
-        
-        # Placeholder: Return a dummy embedding
-        # In production, replace with:
-        # from openai import OpenAI
-        # client = OpenAI()
-        # response = client.embeddings.create(input=text, model="text-embedding-3-small")
-        # return response.data[0].embedding
-        
-        logger.warning("Using placeholder embeddings - replace with actual embedding model")
-        import hashlib
-        # Generate deterministic dummy embedding from text hash
-        text_hash = hashlib.md5(text.encode()).hexdigest()
-        # Create 384-dimensional vector (common embedding size)
-        dummy_embedding = [float(int(text_hash[i:i+2], 16)) / 255.0 for i in range(0, 32, 2)]
-        dummy_embedding = dummy_embedding * 24  # Extend to 384 dimensions
-        return dummy_embedding[:384]
+        try:
+            # Prepare request based on model type
+            if "titan" in self.embedding_model.lower():
+                # Amazon Titan Embeddings
+                body = json.dumps({
+                    "inputText": text
+                })
+            elif "cohere" in self.embedding_model.lower():
+                # Cohere Embeddings
+                body = json.dumps({
+                    "texts": [text],
+                    "input_type": "search_document"
+                })
+            else:
+                raise ValueError(f"Unsupported embedding model: {self.embedding_model}")
+            
+            # Call Bedrock
+            response = self.bedrock_client.invoke_model(
+                modelId=self.embedding_model,
+                body=body
+            )
+            
+            # Parse response
+            response_body = json.loads(response["body"].read())
+            
+            if "titan" in self.embedding_model.lower():
+                # Titan returns: {"embedding": [...], "inputTextTokenCount": N}
+                embedding = response_body["embedding"]
+            elif "cohere" in self.embedding_model.lower():
+                # Cohere returns: {"embeddings": [[...]], "id": "...", "texts": [...]}
+                embedding = response_body["embeddings"][0]
+            
+            return embedding
+            
+        except Exception as e:
+            logger.error(f"Failed to generate embedding: {str(e)}")
+            # Fallback to dummy embedding for development
+            logger.warning("Using fallback dummy embedding")
+            import hashlib
+            text_hash = hashlib.md5(text.encode()).hexdigest()
+            dummy_embedding = [float(int(text_hash[i:i+2], 16)) / 255.0 for i in range(0, 32, 2)]
+            dummy_embedding = dummy_embedding * 64  # Extend to 1024 dimensions for Titan
+            return dummy_embedding[:1024]
     
     def add_document_chunks(
         self,

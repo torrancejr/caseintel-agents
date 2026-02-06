@@ -4,7 +4,7 @@ Document analysis endpoints.
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from src.models.schemas import AnalyzeRequest, AnalyzeResponse, AskAIRequest, AskAIResponse
-from src.models.database import AnalysisJob, AnalysisResult, TimelineEvent, WitnessMention
+from src.models.database import AnalysisJob, AnalysisResult, AgentTimelineEvent, WitnessMention
 from src.api.dependencies import verify_api_key, get_db_session
 from src.workflows.discovery_pipeline import run_pipeline
 from src.services.s3 import s3_service
@@ -106,9 +106,9 @@ async def process_document_pipeline(
         
         # Store timeline events
         for event in final_state.get("timeline_events", []):
-            timeline_event = TimelineEvent(
+            timeline_event = AgentTimelineEvent(
                 case_id=case_id,
-                date=event.get("date"),
+                event_date=event.get("date"),
                 event_description=event.get("event"),
                 source_document_id=job_id,
                 source_page=event.get("source_page"),

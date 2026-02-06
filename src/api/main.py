@@ -2,13 +2,21 @@
 FastAPI application entry point.
 Configures CORS, middleware, and routes.
 """
+# Load environment variables FIRST before any other imports
+from dotenv import load_dotenv
+import os
+from pathlib import Path
+
+# Load .env file from the project root
+env_path = Path(__file__).parent.parent.parent / ".env"
+load_dotenv(env_path)
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from src.api.routes import health, analyze, status
 from src.services.db import init_db, check_db_connection
 import logging
-import os
 
 # Configure logging
 logging.basicConfig(
@@ -81,7 +89,9 @@ async def startup_event():
     
     # Check required environment variables
     required_vars = [
-        "ANTHROPIC_API_KEY",
+        "AWS_ACCESS_KEY_ID",
+        "AWS_SECRET_ACCESS_KEY",
+        "AWS_REGION",
         "DATABASE_URL",
         "CASEINTEL_API_KEY"
     ]
