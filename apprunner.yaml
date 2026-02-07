@@ -3,11 +3,13 @@ runtime: python311
 build:
   commands:
     pre-build:
-      - pip install --upgrade pip
+      - python3 -m pip install --upgrade pip
     build:
-      - pip install -r requirements.txt
+      - python3 -m pip install --no-cache-dir -r requirements.txt
+    post-build:
+      - chmod +x start.sh
 run:
-  command: uvicorn src.api.main:app --host 0.0.0.0 --port 8000
+  command: bash start.sh
   network:
     port: 8000
   env:
