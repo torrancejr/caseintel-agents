@@ -138,7 +138,7 @@ class ContentAnalyzer(BaseAgent):
     
     def __init__(self):
         # Use Sonnet 4.5 for complex content analysis
-        model_id = os.getenv("MODEL_CONTENT", "anthropic.claude-sonnet-4-5-20250929-v1:0")
+        model_id = os.getenv("MODEL_CONTENT", "us.anthropic.claude-3-5-sonnet-20241022-v2:0")
         super().__init__(name="ContentAnalyzer", model_id=model_id)
     
     def run(self, state: dict) -> dict:

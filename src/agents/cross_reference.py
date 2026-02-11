@@ -181,7 +181,7 @@ class CrossReferenceEngine(BaseAgent):
         Args:
             rag_retriever: Optional RAG retrieval service for finding related documents
         """
-        model_id = os.getenv("MODEL_CROSSREF", "anthropic.claude-haiku-4-5-20251001-v1:0")
+        model_id = os.getenv("MODEL_CROSSREF", "us.anthropic.claude-3-5-haiku-20241022-v1:0")
         super().__init__(name="CrossReferenceEngine", model_id=model_id)
         self.rag_retriever = rag_retriever
     

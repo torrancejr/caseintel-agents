@@ -113,7 +113,7 @@ class PrivilegeChecker(BaseAgent):
     
     def __init__(self):
         # Use Sonnet 4.5 for complex privilege analysis
-        model_id = os.getenv("MODEL_PRIVILEGE", "anthropic.claude-sonnet-4-5-20250929-v1:0")
+        model_id = os.getenv("MODEL_PRIVILEGE", "us.anthropic.claude-3-5-sonnet-20241022-v2:0")
         super().__init__(name="PrivilegeChecker", model_id=model_id)
     
     def run(self, state: dict) -> dict:

@@ -119,7 +119,7 @@ class MetadataExtractor(BaseAgent):
     
     def __init__(self):
         # Use Haiku 4.5 for fast metadata extraction
-        model_id = os.getenv("MODEL_METADATA", "anthropic.claude-haiku-4-5-20251001-v1:0")
+        model_id = os.getenv("MODEL_METADATA", "us.anthropic.claude-3-5-haiku-20241022-v1:0")
         super().__init__(name="MetadataExtractor", model_id=model_id)
     
     def run(self, state: dict) -> dict:
