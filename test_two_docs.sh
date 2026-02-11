@@ -2,7 +2,7 @@
 
 set -e
 
-API_URL="http://localhost:8001"
+API_URL="http://localhost:8000"
 API_KEY="4516040c95e8d79ef0aa5febba95e1e8b369ca9faa238feaf9e1ffadf0582aa6"
 
 echo "============================================"
@@ -14,11 +14,11 @@ echo ""
 echo "📧 Test 1: Analyzing Product Liability Email..."
 DOC1_TEXT=$(cat test_documents/test_email_1.txt)
 
+# Use a real case ID from the database (Smith v. Johnson)
 PAYLOAD1=$(cat <<EOF
 {
   "document_text": $(echo "$DOC1_TEXT" | python3 -c 'import sys, json; print(json.dumps(sys.stdin.read()))'),
-  "case_id": "00000000-0000-0000-0000-000000000001",
-  "document_id": "00000000-0000-0000-0000-000000000011"
+  "case_id": "8e9cd5a1-fb40-4a98-8576-5883a3b6e3f5"
 }
 EOF
 )
@@ -36,11 +36,11 @@ echo ""
 echo "📄 Test 2: Analyzing Settlement Agreement..."
 DOC2_TEXT=$(cat test_documents/test_contract_2.txt)
 
+# Use a real case ID from the database (Bill vs. Sam #928)
 PAYLOAD2=$(cat <<EOF
 {
   "document_text": $(echo "$DOC2_TEXT" | python3 -c 'import sys, json; print(json.dumps(sys.stdin.read()))'),
-  "case_id": "00000000-0000-0000-0000-000000000002",
-  "document_id": "00000000-0000-0000-0000-000000000022"
+  "case_id": "91254f0f-b6c3-4e3f-993b-40571603b44a"
 }
 EOF
 )
