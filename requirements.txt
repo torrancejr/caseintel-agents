@@ -5,10 +5,10 @@ python-multipart==0.0.6
 
 # AI and LLM
 anthropic==0.18.0
-langchain==0.1.6
-langchain-community==0.0.20
+langchain==0.2.16
+langchain-community==0.2.16
 langchain-anthropic==0.1.1
-langgraph==0.0.20
+langgraph==0.2.27
 
 # Vector database
 chromadb==0.4.22
@@ -20,7 +20,7 @@ sqlalchemy==2.0.25
 alembic==1.13.1
 
 # Data validation
-pydantic==2.6.0
+pydantic==2.9.2
 pydantic-settings==2.1.0
 
 # AWS
